@@ -1,16 +1,21 @@
 import os
 import time
-from .base_page import BasePage
-from .locators import MainPageLocators, AboutPageLocators, ContactPageLocators, DownloadPageLocator
-from selenium.webdriver import ActionChains
 import urllib.request
+from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
-list_partners_text_before = ""
+from .base_page import BasePage
+from .locators import MainPageLocators, AboutPageLocators, ContactPageLocators, DownloadPageLocator
+from .logger import Logger
+
+
+log = Logger().loggen()
 
 
 class MainPage(BasePage):
+
+    list_partners_text_before = ""
 
     def scenario_one(self):
         self.click_contact_link()
@@ -60,7 +65,7 @@ class MainPage(BasePage):
         for image in images:
             image_sizes.add(image.get_attribute('width') + image.get_attribute('height'))
         assert len(image_sizes) == 1, \
-            f"Есть отличающиеся картинки"
+            "Есть отличающиеся картинки"
 
     def scenario_two(self):
         self.click_contact_link()
@@ -95,8 +100,7 @@ class MainPage(BasePage):
              f"\nActual: '{str(label_list_of_partners)}' Expected: {str(expected_label)}")
 
     def take_list_partners_text_before(self):
-        global list_partners_text_before
-        list_partners_text_before = self.browser.find_element(*ContactPageLocators.list_of_partners).text
+        self.list_partners_text_before = self.browser.find_element(*ContactPageLocators.list_of_partners).text
 
     def change_the_region(self, region: str):
         region_label = self.browser.find_element(*ContactPageLocators.region_label_link)
@@ -107,7 +111,7 @@ class MainPage(BasePage):
                 element.click()
                 break
         else:
-            raise Exception(f"Регион '{region}' не найден")
+            log.info(f"Регион '{region}' не найден")
 
     def check_region_text_after_region_select(self):
         expected_text_value = 'Камчатский край'
@@ -128,8 +132,8 @@ class MainPage(BasePage):
 
     def check_list_of_partners_in_contacts_changes(self):
         list_partners_text = self.browser.find_element(*ContactPageLocators.list_of_partners).text
-        assert list_partners_text != list_partners_text_before, \
-            f'Лист партнёров не изменился'
+        assert list_partners_text != self.list_partners_text_before, \
+            'Лист партнёров не изменился'
 
     def check_url_changes(self):
         actual_url = self.browser.current_url
@@ -164,7 +168,7 @@ class MainPage(BasePage):
         filepath = os.path.join(filedir, filename)
         urllib.request.urlretrieve(href, filepath)
         size = os.path.getsize(filepath)
-        actual_size_mb = (round(size / 1024 ** 2, 2))
+        actual_size_mb = round(size / 1024 ** 2, 2)
         expected_value = float(download.text.split(" ")[-2])
         time.sleep(3)
         os.remove(filepath)

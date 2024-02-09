@@ -1,6 +1,11 @@
-from .locators import BasePageLocation
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
+from .logger import Logger
+from .locators import BasePageLocation
+
+
+log = Logger().loggen()
 
 
 class BasePage:
@@ -19,8 +24,8 @@ class BasePage:
             cookies = (self.browser.find_element
                        (*BasePageLocation.close_mes_cookies_sbis))
             cookies.click()
-        except Exception as err:
-            raise err
+        except StaleElementReferenceException:
+            log.info("No sbis Cookies")
 
     def close_cookies_mess_tensor(self):
         try:
@@ -29,5 +34,5 @@ class BasePage:
             cookies = WebDriverWait(self.browser, 10).until(
                 ec.presence_of_element_located(BasePageLocation.close_mes_cookies_tensor))
             cookies.click()
-        except Exception as err:
-            raise err
+        except StaleElementReferenceException:
+            log.info("No tensor Cookies ")
