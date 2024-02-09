@@ -80,7 +80,7 @@ class MainPage(BasePage):
         expected_label = 'Нижегородская обл.'
         assert region_label.text == expected_label, \
             (f"Регион не соответствует ожидаемому. "
-             f"\nActual: '{str(region_label)}' Expected: {str(expected_label)}")
+             f"\nActual: '{str(region_label.text)}' Expected: {str(expected_label)}")
 
     def check_list_of_partners(self):
         list_of_partners = self.browser.find_element(*ContactPageLocators.list_of_partners)
@@ -156,15 +156,18 @@ class MainPage(BasePage):
         ActionChains(self.browser).click(download).perform()
         download = WebDriverWait(self.browser, 10).until(ec.presence_of_element_located(
             DownloadPageLocator.web_install_link))
-        # self.browser.find_element(*DownloadPageLocator.web_install_link)
         href = download.get_dom_attribute('href')
-        filename = '/download/' + href.split('/')[-1]
-        urllib.request.urlretrieve(href, filename)
-        size = os.path.getsize(filename)
+        filedir = os.path.join(os.getcwd(), "downloads")
+        filename = href.split('/')[-1]
+        if not os.path.exists(filedir):
+            os.mkdir(filedir)
+        filepath = os.path.join(filedir, filename)
+        urllib.request.urlretrieve(href, filepath)
+        size = os.path.getsize(filepath)
         actual_size_mb = (round(size / 1024 ** 2, 2))
         expected_value = float(download.text.split(" ")[-2])
         time.sleep(3)
-        os.remove(filename)
+        os.remove(filepath)
         assert expected_value == actual_size_mb, \
             (f"Размер файла в МБ не соответствует ожидаемому. "
              f"\nActual: '{str(actual_size_mb)}' Expected: {str(expected_value)}")
